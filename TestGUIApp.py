@@ -1,7 +1,9 @@
 import sys
-from PyQt5.QtWidgets import (QApplication, QWidget, QMainWindow)
-from PyQt5 import QtCore
+import os.path
+from PyQt5.QtWidgets import (QApplication, QWidget, QMainWindow, QMessageBox, QFileDialog)
+from PyQt5.QtCore import *
 from PyQt5.Qt import Qt
+from PyQt5.QtGui import *
 import xlsxwriter
 import numpy as np
 import pandas as pd
@@ -10,19 +12,41 @@ from TestGUI import Ui_Form
 from mystylesheet import stylesheet
 
 class MainWindow(QMainWindow, Ui_Form, QWidget):
-    rightClicked = QtCore.pyqtSignal()
+    rightClicked = pyqtSignal()
     def __init__(self, *args, obj=None, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
 
         self.CalculateButton.installEventFilter(self)
 
-
+        self.textEdit.setText("Al iniciar esta aplicación por primera vez se crea un archivo llamado 'Materiales.xlsx' donde se guardan los datos de cada material. Si se desea agrandar la lista, solo agregue los nuevos materiales en el excel y reinicie la app.\n-NO cambie el nombre del excel.\n-NO cambie el nombre de las columnas ni la ubicacion de la tabla (que arranque en A1,1).'")
 
         self.counter = 0
 
-        #### Importamos data Materiales del excel ####
-        self.df = pd.read_excel("Materiales.xlsx")
+        self.excel = {
+        "Material":["Densidad","Módulo de Young","Factor de pérdidas","Módulo Poisson",],
+        "Acero":["7700","195000000000","0.0001","0.3"],
+        "Aluminio":["2700","71000000000","0.001","0.15"],
+        "Bronce":["8500","8500","0.01","0.35"],
+        "Cobre":["8915","127000000000","0.01","0.34"],
+        "Contrachapado":["600","8300000000","0.05","0.000000001"],
+        "Hierro":["7700","195000000000","0.0001","0.15"],
+        "Hormigón":["2400","30000000000","0.05","0.2"],
+        "Hormigón Ladrillo":["900","4800000000","0.05","0.12"],
+        "Ladrillo":["2100","25000000000","0.01","0.15"],
+        "Madera":["650","12000000000","0.01","0.15"],
+        "Neopreno":["1200","100000000","0.1","0.49"],
+        "Plomo":["11300","17000000000","0.0005","0.15"],
+        "Vidrio":["2500","68000000000","0.02","0.23"],
+        "PYL":["800","2000000000","0.006","0.24"],
+        }
+
+        #### Importamos o creamos data Materiales del excel ####
+        if os.path.isfile('Materiales.xlsx'):
+            self.df = pd.read_excel("Materiales.xlsx")
+        else:
+            self.CrearExcel()
+            self.df = pd.read_excel("Materiales.xlsx")
         self.df.to_csv('csvfile.csv', encoding='utf-8')
         self.df = pd.read_csv("csvfile.csv", encoding='utf-8')
         self.comboitems = {
@@ -30,6 +54,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         }
         #ComboBox con Materiales
         self.comboBox.addItems(list(self.comboitems.values())[0])
+        self.comboBox.addItems(["Usuario"])
         #Funcion que se ejecuta cuando elijo material
         self.comboBox.currentIndexChanged.connect(self.what)
 
@@ -98,7 +123,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
 
     def getfiles(self):
-        fileName, _ = QFileDialog.getSaveFileName(self, 'Single File', QtCore.QDir.rootPath() , '*.xlsm')
+        fileName, _ = QFileDialog.getSaveFileName(self, 'Single File', QDir.rootPath() , '*.xlsm')
 
 
     def Error(self,tipo):
@@ -138,10 +163,12 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
             self.Error(1) #No es numero
             return False
 
+
+
     #########PRINCIPAL###########
     def Calculo(self):
         #Fijarnos que valores sean numeros y positivos.
-        try:
+        #try:
             if self.CheckError(self.ModuloP) and self.CheckError(self.ModuloY) and self.CheckError(self.FactorP) and self.CheckError(self.Densidad) and self.CheckError(self.lineEditAncho.text()) and self.CheckError(self.lineEditAlto.text()) and self.CheckError(self.lineEditEspesor.text()):
 
                 #Asignacion de variables base
@@ -188,10 +215,10 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                         freqB = freqz[freqz<self.fd]
                         if len(freqB>0):
                             cutB = np.where(freq == freqB[0])
-                            nt = np.array(self.PerdidaxFreq[cutB[0][0]:cutB[0][0]+len(freqB)])
+                            ntB = np.array(self.PerdidaxFreq[cutB[0][0]:cutB[0][0]+len(freqB)])
                         else:
-                            nt = np.array(self.PerdidaxFreq[0:len(freqB)])
-                        RB = 20*np.log10(masa*freqB) - 10*np.log10(np.pi/(4*nt)) - 10*np.log10(self.fc/(freqB-self.fc)) - 47
+                            ntB = np.array(self.PerdidaxFreq[0:len(freqB)])
+                        RB = 20*np.log10(masa*freqB) - 10*np.log10(np.pi/(4*ntB)) - 10*np.log10(self.fc/(freqB-self.fc)) - 47
 
                         #Arriba de fd
                         freqC = freq[freq>self.fd]
@@ -209,29 +236,66 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                     self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], self.Resultados["Panel Simple"])
 
                 else:
-                    #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])))
-                    pass
+                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None")
+
                 #SHARP:
                 if self.checkBoxSharp.isChecked() == True:
                     ### Calculos Sharp
-                    freqD = freq[freq < (self.fc/2)]
+                    if self.fc/2 > 20:
+                    #Debajo de frecuencia Critica/2
+                        freqD = freq[freq < (self.fc/2)]
+                        RD = 10*np.log10(1+((np.pi*masa*freqD)/(p0*c0))**2) - 5.5
+
+                        #arriba de frecuencia Critica
+                        freqE = freq[freq > self.fc]
+                        cutE = np.where(freq == freqE[0])
+                        ntE = np.array(self.PerdidaxFreq[cutE[0][0]:cutE[0][0]+len(freqE)])
+                        RE1 = 10*np.log10(1+((np.pi*masa*freqE)/(p0*c0))**2) + 10*np.log10(2*ntE*freqE/(np.pi*self.fc))
+                        RE2 = 10*np.log10(1+((np.pi*masa*freqE)/(p0*c0))**2)-5.5
+                        RE = np.minimum(RE1,RE2)
+
+
+                        freq1 = freq[freq > (self.fc/2)]
+                        freqF = freq1[freq1 < self.fc]
+                        y = freqE[0] - freqD[-1]
+                        x = RE[0] - RD[-1]
+                        px = [freqD[-1],freqE[0]]
+                        py = [RD[-1],RE[0]]
+                        p = np.polyfit(px,py,1)
+                        RF = p[0]*freqF+p[1]
+                        #print(p[0])
+
+                        arr2 = (RD,RF,RE)
+                        arr2 = np.around(np.concatenate(arr2),decimals=1)
+                    else:
+                        freqE = freq[freq > self.fc/2]
+                        cutE = np.where(freq == freqE[0])
+                        ntE = np.array(self.PerdidaxFreq[cutE[0][0]:cutE[0][0]+len(freqE)])
+                        RE1 = 10*np.log10(1+((np.pi*masa*freqE)/(p0*c0))**2) + 10*np.log10(2*ntE*freqE/(np.pi*self.fc))
+                        RE2 = 10*np.log10(1+((np.pi*masa*freqE)/(p0*c0))**2)-5.5
+                        RE = np.minimum(RE1,RE2)
+                        arr2=RE
+
+                    self.Resultados["Sharp"] = list(arr2)
+                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], self.Resultados["Sharp"])
+
                 else:
-                    #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])))
-                    pass
+                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None")
+
                 #DAVY:
                 if self.checkBoxDavy.isChecked() == True:
                     ### Calculos Davy
                     pass
                 else:
-                    #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])))
-                    pass
+                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None")
+
                 #ISO
                 if self.checkBoxIso.isChecked() == True:
                     ### Calculos Iso
                     pass
                 else:
-                    #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])))
-                    pass
+                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None")
+
                 #### ......  ####
 
                 ## Muestra data en la cajita de texto
@@ -240,7 +304,11 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 " Hz\nFrecuencia de Resonancia (Primer modo): "+str(round(self.fr,0))+" Hz")
 
                 #Detalles Grafico:
+
                 self.GraphWidget.canvas.axes.legend(("Panel",'Sharp',"Davy","Iso"),loc='lower right')
+                self.GraphWidget.canvas.axes.axvline(self.fc,color="r",linestyle="--")
+                self.GraphWidget.canvas.axes.axvline(self.fd,color="r",linestyle="--")
+                self.GraphWidget.canvas.axes.axvline(self.fr,color="r",linestyle="--")
                 self.GraphWidget.canvas.axes.set_title('Indice de Reduccion Sonora')
                 self.GraphWidget.canvas.axes.set_xscale('log')
                 # self.GraphWidget.canvas.axes.set_xticks(self.Resultados["Frecuencia"])
@@ -248,11 +316,11 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 self.GraphWidget.canvas.draw()
                 self.counter = self.counter + 1
 
-        except AttributeError:
-            self.Error(2)
+        #except AttributeError:
+            #self.Error(2)
 
-        except IndexError:
-            self.Error(3)
+        #except IndexError:
+            #self.Error(3)
     #################################################### END CALCULO
     ####END CALCULO
 
@@ -289,17 +357,33 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
 
     #Exportar el excel con la tabla y datos calculados
+    def CrearExcel(self):
+        workbook = xlsxwriter.Workbook('Materiales.xlsx')
+        worksheet = workbook.add_worksheet()
+        #worksheet.write
+        row_num = 0
+        for key, value in self.excel.items():
+            worksheet.write(row_num, 0, row_num)
+            worksheet.write(row_num, 1, key)
+            worksheet.write_row(row_num, 2, value)
+            row_num += 1
+        worksheet.write(0, 0, "Id.")
+        workbook.close()
+
     def Exportar(self):
-        #workbook, _ = QFileDialog.getSaveFileName(self, 'Single File', QtCore.QDir.rootPath() , '*.xlsm')
-        workbook = xlsxwriter.Workbook('Export.xlsx')
+        name,_ = QFileDialog.getSaveFileName(self, 'Save File', QDir.rootPath() , '*.xlsx')
+        workbook = xlsxwriter.Workbook(name)
         worksheet = workbook.add_worksheet()
         #worksheet.write
         row_num = 0
         for key, value in self.Resultados.items():
-            worksheet.write(row_num, 0, key)
-            worksheet.write_row(row_num, 1, value)
+            worksheet.write(row_num, 1, key)
+            worksheet.write_row(row_num, 2, value)
             row_num += 1
         workbook.close()
+
+
+
 
     ##########
 
