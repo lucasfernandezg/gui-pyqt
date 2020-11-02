@@ -396,7 +396,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         # Add a series to the chart.
         chart.add_series({
         'values': '=Sheet1!$C$2:$AG$2',
-        'categories': '=Sheet1!$C$2:$AG$2',
+        'categories': '=Sheet1!$C$1:$AG$1',
         'marker': {'type': 'diamond'},
         #'data_labels': {'value': True},
         'name':'Panel Simple',
@@ -405,7 +405,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
         chart.add_series({
         'values': '=Sheet1!$C$3:$AG$3',
-        'categories': '=Sheet1!$C$2:$AG$2',
+        'categories': '=Sheet1!$C$1:$AG$1',
         'marker': {'type': 'diamond'},
         #'data_labels': {'value': True},
         'name':'Sharp',
@@ -414,7 +414,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
         chart.add_series({
         'values': '=Sheet1!$C$4:$AG$4',
-        'categories': '=Sheet1!$C$2:$AG$2',
+        'categories': '=Sheet1!$C$1:$AG$1',
         'marker': {'type': 'diamond'},
         #'data_labels': {'value': True},
         'name':'Davy',
@@ -423,7 +423,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
         chart.add_series({
         'values': '=Sheet1!$C$5:$AG$5',
-        'categories': '=Sheet1!$C$2:$AG$2',
+        'categories': '=Sheet1!$C$1:$AG$1',
         'marker': {'type': 'diamond'},
         #'data_labels': {'value': True},
         'name':'ISO',
