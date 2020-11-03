@@ -19,11 +19,11 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         self.setupUi(self)
 
         self.CalculateButton.installEventFilter(self)
-
+        # Explicacion
         self.textEdit.setText("Al iniciar esta aplicación por primera vez se crea un archivo llamado 'Materiales.xlsx' donde se guardan los datos de cada material. Si se desea agrandar la lista, solo agregue los nuevos materiales en el excel y reinicie la app.\n-NO cambie el nombre del excel.\n-NO cambie el nombre de las columnas ni la ubicacion de la tabla (que arranque en A1,1).'")
-
+        # Contador para saber clean() el graph.
         self.counter = 0
-
+        # Data Materiales de base
         self.excel = {
         "Material":["Densidad","Módulo de Young","Factor de pérdidas","Módulo Poisson",],
         "Acero":["7700","195000000000","0.0001","0.3"],
@@ -53,34 +53,35 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         self.comboitems = {
         "Material":list(self.df["Material"].values),
         }
-        #ComboBox con Materiales
+        #ComboBox con Materiales Importados o creados
         self.comboBox.addItems(list(self.comboitems.values())[0])
+        #Agregamos modo Usuario
         self.comboBox.addItems(["Usuario"])
         #Funcion que se ejecuta cuando elijo material
         self.comboBox.currentIndexChanged.connect(self.what)
-
+        #Boton Asignar
         self.pushButton_3.setEnabled(False)
-
+        # Line Edits de los parametros de material
         self.lineEditFactorP.setReadOnly(True)
         self.lineEditModuloP.setReadOnly(True)
         self.lineEditModuloY.setReadOnly(True)
         self.lineEditDensidad.setReadOnly(True)
 
-        #Cuando cambio Parametros material a mano
+        #Cuando cambio Parametros material a mano (solo cuando modo usuario)
         self.pushButton_3.clicked.connect(self.AsignarMP)
         self.pushButton_3.clicked.connect(self.AsignarMY)
         self.pushButton_3.clicked.connect(self.AsignarFP)
         self.pushButton_3.clicked.connect(self.AsignarD)
 
 
-        #Boton de calculo y graficado
+        #Boton de calculo y graficado, y exportar
         self.CalculateButton.clicked.connect(self.Calculo)
-         #PRUEBA
         self.ExportButton.clicked.connect(self.Exportar)
 
         ftercio = [20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,20000]
         self.foct = [31.5,63,125,250,500,1000,2000,4000,8000,16000]
 
+        #Dictionary a usar para data final
         self.Resultados = {
         "Frecuencia":[20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,20000],
         "Panel Simple":[],
@@ -89,19 +90,22 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         "ISO 12354-1":[]
         }
 
-        #self.pushButton_2.clicked.connect(self.getfiles)
 
 
-    ###### Funciones ######
+    ############## Funciones #############
+    #Quiero agregar click derecho. No pude.#
     def onClicked(self):
         super(MainWindow, self).onClicked(event)
+    #
 
-
+    ## Sé que Asi capto que estoy tocando el click derecho:
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton:
             print("click derecho")
         super(MainWindow, self).mousePressEvent(event)
+    ## ¿pero como lo asocio a un Widget en particular?
 
+    #### Si modo usario, o no modo usuario ####
     def what(self):
         if self.comboBox.currentText() == "Usuario":
             self.pushButton_3.setEnabled(True)
@@ -121,12 +125,13 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
             self.lineEditModuloY.setReadOnly(True)
             self.lineEditDensidad.setReadOnly(True)
             self.Act()
+    ########
 
+    ## Para guardar file
+    # def getfiles(self):
+    #     fileName, _ = QFileDialog.getSaveFileName(self, 'Single File', QDir.rootPath() , '*.xlsm')
 
-    def getfiles(self):
-        fileName, _ = QFileDialog.getSaveFileName(self, 'Single File', QDir.rootPath() , '*.xlsm')
-
-
+    ##### Dialogo dependiendo el tipo de error (VER CheckError)
     def Error(self,tipo):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Warning)
@@ -147,7 +152,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
 
 
-
+    #### Decide que tipo de error tengo y luego Error(tipo)
     def CheckError(self,val):
         try:
             a = float(val)
@@ -163,12 +168,12 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         except (ValueError,TypeError):
             self.Error(1) #No es numero
             return False
+    ##########
 
 
-
-    #########PRINCIPAL###########
+    ############## PRINCIPAL (Hace todos los calculos) ################
     def Calculo(self):
-        #Fijarnos que valores sean numeros y positivos.
+        #Fijarnos que valores sean numeros y positivos: CheckError().
         try:
             if self.CheckError(self.ModuloP) and self.CheckError(self.ModuloY) and self.CheckError(self.FactorP) and self.CheckError(self.Densidad) and self.CheckError(self.lineEditAncho.text()) and self.CheckError(self.lineEditAlto.text()) and self.CheckError(self.lineEditEspesor.text()):
 
@@ -180,9 +185,6 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 self.Alto = float(self.lineEditAlto.text())
                 self.Espesor = float(self.lineEditEspesor.text())
                 masa = self.Densidad*self.Espesor
-
-                #Limpia el grafico
-                #self.MplWidget.canvas.axes.clear()
 
                 #Reseteo de resultados
                 self.Resultados["Panel Simple"]=[]
@@ -202,13 +204,15 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 " Hz\nFrecuencia de Densidad: "+str(round(self.fd,0))+
                 " Hz\nFrecuencia de Resonancia (Primer modo): "+str(round(self.fr,0))+" Hz")
 
-                #Resetea el grafico
+                ## Resetea el grafico si ya habia uno antes
                 if self.counter>0:
                     self.GraphWidget.canvas.axes.clear()
 
                 ### Arrancamos con cada modelo ###
+                #Frecuencias:
                 freq = np.array(self.Resultados["Frecuencia"])
-                #PANEL SIMPLE:
+
+                #### PANEL SIMPLE: ####
                 if self.checkBoxPanel.isChecked() == True:
 
                     if self.fc<self.fd:
@@ -245,7 +249,10 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 else:
                     #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None",marker="o")
                     pass
-                #SHARP:
+
+                ################
+
+                #### SHARP: ####
                 if self.checkBoxSharp.isChecked() == True:
                     ### Calculos Sharp
                     if self.fc/2 > 20:
@@ -291,25 +298,33 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 else:
                     #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None",marker="o")
                     pass
-                #DAVY:
+
+                #################
+
+                ##### DAVY: #####
                 if self.checkBoxDavy.isChecked() == True:
                     ### Calculos Davy
                     pass
                 else:
                     #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None",marker="o")
                     pass
-                #ISO
+
+                #################
+
+                ##### ISO: ######
                 if self.checkBoxIso.isChecked() == True:
                     ### Calculos Iso
                     pass
                 else:
                     #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None",marker="o")
                     pass
-                #### ......  ####
+
+                ###############
+
+    ################ ......  #######################
 
 
-
-                #Detalles Grafico:
+                ### Detalles Grafico: ###
 
                 self.GraphWidget.canvas.axes.legend(loc='lower right')
                 self.GraphWidget.canvas.axes.axvline(self.fc,color="r",linestyle="--")
@@ -324,15 +339,20 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 self.GraphWidget.canvas.draw()
                 self.counter = self.counter + 1
 
+            ##Cierra if de CheckError
+
+        ## Ciera Try con excepciones y errores:
         except AttributeError:
             self.Error(2)
 
         except IndexError:
             self.Error(3)
-    #################################################### END CALCULO
-    ####END CALCULO
 
-    #Asociar parametros del material a variables
+    ################### END CALCULO ########################
+    #END CALCULO
+
+
+    ### Del excel a las variables y LineEdits ###
     def Act(self):
         d = self.df.loc[self.df['Material'] == self.comboBox.currentText()]["Densidad"].values[0]
         my = self.df.loc[self.df['Material'] == self.comboBox.currentText()]["Módulo de Young"].values[0]
@@ -349,9 +369,9 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
             self.lineEditDensidad.setText(str(self.Densidad))
         else:
             pass
-    ###########
+    ##############
 
-    #Asociar parametros que meto a mano a variables
+    ###  Modo Usuario: Al tocar el botton "Asignar"  ###
     def AsignarMP(self):
         self.ModuloP = float(self.lineEditModuloP.text())
     def AsignarMY(self):
@@ -364,7 +384,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
 
 
-    #Exportar el excel con la tabla y datos calculados
+    ### Si NO hay un "Materiales.xlsx", entonces crea este excel ###
     def CrearExcel(self):
         workbook = xlsxwriter.Workbook('Materiales.xlsx')
         worksheet = workbook.add_worksheet()
@@ -378,10 +398,11 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         worksheet.write(0, 0, "Id.")
         workbook.close()
 
+    #####################
 
 
 
-
+    ########## EXCEL Al exportar #############
     def Exportar(self):
         name,_ = QFileDialog.getSaveFileName(self, 'Save File', QDir.rootPath() , '*.xlsx')
         workbook = xlsxwriter.Workbook(name)
@@ -444,9 +465,8 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         workbook.close()
 
 
+########################### END FUNCIONES ###############################
 
-
-    ##########
 
 
 
