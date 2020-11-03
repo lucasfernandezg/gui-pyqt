@@ -11,6 +11,7 @@ import xlrd
 from TestGUI import Ui_Form
 from mystylesheet import stylesheet
 
+
 class MainWindow(QMainWindow, Ui_Form, QWidget):
     rightClicked = pyqtSignal()
     def __init__(self, *args, obj=None, **kwargs):
@@ -82,7 +83,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
         self.Resultados = {
         "Frecuencia":[20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,20000],
-        "Pared Simple":[],
+        "Panel Simple":[],
         "Sharp":[],
         "Davy":[],
         "ISO 12354-1":[]
@@ -184,9 +185,9 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 #self.MplWidget.canvas.axes.clear()
 
                 #Reseteo de resultados
-                self.Resultados["Pared Simple"]=[]
+                self.Resultados["Panel Simple"]=[]
                 self.Resultados["Sharp"]=[]
-                self.Resultados["Devy"]=[]
+                self.Resultados["Davy"]=[]
                 self.Resultados["ISO 12354-1"]=[]
 
                 #Calculos Compartidos. fd=freq densidad, fc=freq critica, fr=freq resonancia(1,1)
@@ -239,11 +240,11 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                     #print(self.Resultados["Sharp"])
 
                     #Graficar:
-                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], self.Resultados["Panel Simple"])
+                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], self.Resultados["Panel Simple"],marker="o",label="Panel")
 
                 else:
-                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None")
-
+                    #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None",marker="o")
+                    pass
                 #SHARP:
                 if self.checkBoxSharp.isChecked() == True:
                     ### Calculos Sharp
@@ -274,7 +275,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                         #print(p[0])
 
                         arr2 = (RD,RF,RE)
-                        arr2 = np.around(np.concatenate(arr2),decimals=1)
+                        arr2 = list(np.around(np.concatenate(arr2),decimals=1))
                     else:
                         # freqE = freq[freq > self.fc/2]
                         # cutE = np.where(freq == freqE[0])
@@ -282,41 +283,42 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                         RE1 = 10*np.log10(1+((np.pi*masa*freq)/(p0*c0))**2) + 10*np.log10(2*self.PerdidaxFreq*freq/(np.pi*self.fc))
                         RE2 = 10*np.log10(1+((np.pi*masa*freq)/(p0*c0))**2)-5.5
                         RE = np.minimum(RE1,RE2)
-                        arr2=RE
+                        arr2=list(np.around(RE,decimals=1))
 
                     self.Resultados["Sharp"] = list(arr2)
-                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], self.Resultados["Sharp"])
+                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], self.Resultados["Sharp"],marker="o",label="Sharp")
 
                 else:
-                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None")
-
+                    #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None",marker="o")
+                    pass
                 #DAVY:
                 if self.checkBoxDavy.isChecked() == True:
                     ### Calculos Davy
                     pass
                 else:
-                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None")
-
+                    #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None",marker="o")
+                    pass
                 #ISO
                 if self.checkBoxIso.isChecked() == True:
                     ### Calculos Iso
                     pass
                 else:
-                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None")
-
+                    #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None",marker="o")
+                    pass
                 #### ......  ####
 
 
 
                 #Detalles Grafico:
 
-                self.GraphWidget.canvas.axes.legend(("Panel",'Sharp',"Davy","Iso"),loc='lower right')
+                self.GraphWidget.canvas.axes.legend(loc='lower right')
                 self.GraphWidget.canvas.axes.axvline(self.fc,color="r",linestyle="--")
                 self.GraphWidget.canvas.axes.axvline(self.fd,color="r",linestyle="--")
                 if self.fr>10:
                     self.GraphWidget.canvas.axes.axvline(self.fr,color="r",linestyle="--")
                 self.GraphWidget.canvas.axes.set_title('Indice de Reduccion Sonora')
                 self.GraphWidget.canvas.axes.set_xscale('log')
+                self.GraphWidget.canvas.axes.grid()
                 # self.GraphWidget.canvas.axes.set_xticks(self.Resultados["Frecuencia"])
                 # self.GraphWidget.canvas.axes.set_xticklabels(["","","31.5","","","63","","","125","","","250","","","500","","","1000","","","2000","","","4000","","","8000","","","16000"])
                 self.GraphWidget.canvas.draw()
@@ -376,16 +378,69 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         worksheet.write(0, 0, "Id.")
         workbook.close()
 
+
+
+
+
     def Exportar(self):
         name,_ = QFileDialog.getSaveFileName(self, 'Save File', QDir.rootPath() , '*.xlsx')
         workbook = xlsxwriter.Workbook(name)
+        bold = workbook.add_format({'bold': True})
         worksheet = workbook.add_worksheet()
+        worksheet.set_column('B:B', 12)
+        border = workbook.add_format({'border': 1})
         #worksheet.write
         row_num = 0
         for key, value in self.Resultados.items():
-            worksheet.write(row_num, 1, key)
-            worksheet.write_row(row_num, 2, value)
+            worksheet.set_row(row_num,18)
+            worksheet.write(row_num, 1, key, bold)
+            worksheet.write_row(row_num, 2, value,border)
             row_num += 1
+        # Create a new chart object.
+        chart = workbook.add_chart({'type': 'line'})
+
+        # Add a series to the chart.
+        chart.add_series({
+        'values': '=Sheet1!$C$2:$AG$2',
+        'categories': '=Sheet1!$C$1:$AG$1',
+        'marker': {'type': 'diamond'},
+        #'data_labels': {'value': True},
+        'name':'Panel Simple',
+        'line':{'color':'red'}
+        })
+
+        chart.add_series({
+        'values': '=Sheet1!$C$3:$AG$3',
+        'categories': '=Sheet1!$C$1:$AG$1',
+        'marker': {'type': 'diamond'},
+        #'data_labels': {'value': True},
+        'name':'Sharp',
+        'line':{'color':'blue'}
+        })
+
+        chart.add_series({
+        'values': '=Sheet1!$C$4:$AG$4',
+        'categories': '=Sheet1!$C$1:$AG$1',
+        'marker': {'type': 'diamond'},
+        #'data_labels': {'value': True},
+        'name':'Davy',
+        'line':{'color':'green'}
+        })
+
+        chart.add_series({
+        'values': '=Sheet1!$C$5:$AG$5',
+        'categories': '=Sheet1!$C$1:$AG$1',
+        'marker': {'type': 'diamond'},
+        #'data_labels': {'value': True},
+        'name':'ISO',
+        'line':{'color':'orange'}
+        })
+        chart.set_x_axis({'log_base': 10})
+        chart.set_size({'width': 1600, 'height': 600})
+        chart.set_title({'name': 'Indice de Reducción Sonora'})
+
+        # Insert the chart into the worksheet.
+        worksheet.insert_chart('B8', chart)
         workbook.close()
 
 
