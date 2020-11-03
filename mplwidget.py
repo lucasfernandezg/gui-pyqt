@@ -4,7 +4,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 import matplotlib
-import mplcursors
+
 
 
 # Ensure using PyQt5 backend
@@ -18,7 +18,7 @@ class MplCanvas(Canvas):
         Canvas.__init__(self, self.fig)
         Canvas.setSizePolicy(self, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         Canvas.updateGeometry(self)
-        mplcursors.cursor(self.fig)
+
 
 
 

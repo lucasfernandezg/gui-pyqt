@@ -10,6 +10,7 @@ import pandas as pd
 import xlrd
 from TestGUI import Ui_Form
 from mystylesheet import stylesheet
+import matplotlib
 
 
 class MainWindow(QMainWindow, Ui_Form, QWidget):
@@ -41,6 +42,11 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         "Vidrio":["2500","68000000000","0.02","0.23"],
         "PYL":["800","2000000000","0.006","0.24"],
         }
+
+        # Crear Grafico y guardarlo sin mostrarlo. Para Informe TP2
+        # matplotlib.pyplot.figure()
+        # matplotlib.pyplot.plot([1,2,3],[4,3,6])
+        # matplotlib.pyplot.savefig("Example.png")
 
         #### Importamos o creamos data Materiales del excel ####
         if os.path.isfile('Materiales.xlsx'):
