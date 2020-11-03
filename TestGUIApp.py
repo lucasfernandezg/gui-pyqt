@@ -137,9 +137,9 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         elif tipo == 1:
             msg.setDetailedText("Ya estamos grandes... los parametros tienen que ser números.")
         elif tipo == 2:
-            msg.setDetailedText("Parametros vacíos Willis.")
+            msg.setDetailedText("Parametros vacíos Willis. Puede que te hayas olvidado de tocar 'asignar' si estas en modo 'Usuario'.\nJaque Mate!")
         elif tipo == 3:
-            msg.setDetailedText("La Frecuencia Critica quedó mayor a la Frecuencia de Densidad a partir de los parametros dados.")
+            msg.setDetailedText("La Frecuencia Critica quedó arriba de 20kHz a partir de los parametros dados. En un caso real, eso no sucede amigo.\nFrecuencia Critica: "+str(self.fc))
 
 
         msg.exec_()
@@ -168,7 +168,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
     #########PRINCIPAL###########
     def Calculo(self):
         #Fijarnos que valores sean numeros y positivos.
-        #try:
+        try:
             if self.CheckError(self.ModuloP) and self.CheckError(self.ModuloY) and self.CheckError(self.FactorP) and self.CheckError(self.Densidad) and self.CheckError(self.lineEditAncho.text()) and self.CheckError(self.lineEditAlto.text()) and self.CheckError(self.lineEditEspesor.text()):
 
                 #Asignacion de variables base
@@ -195,6 +195,12 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 self.fd = (self.ModuloY/(np.pi*2*self.Densidad))*np.sqrt(masa/self.B)
                 self.fr = ((c0**2)/(4*self.fc))*((1/self.Ancho**2)+(1/self.Alto**2))
                 self.PerdidaxFreq = list(self.FactorP + masa/(485*np.sqrt(np.array(self.Resultados["Frecuencia"]))))
+
+                ## Muestra data en la cajita de texto
+                self.textEdit.setText("Frecuencia Critica: "+str(round(self.fc,0))+
+                " Hz\nFrecuencia de Densidad: "+str(round(self.fd,0))+
+                " Hz\nFrecuencia de Resonancia (Primer modo): "+str(round(self.fr,0))+" Hz")
+
                 #Resetea el grafico
                 if self.counter>0:
                     self.GraphWidget.canvas.axes.clear()
@@ -248,6 +254,8 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
                         #arriba de frecuencia Critica
                         freqE = freq[freq > self.fc]
+                        # print(freqE)
+                        # print(self.fc)
                         cutE = np.where(freq == freqE[0])
                         ntE = np.array(self.PerdidaxFreq[cutE[0][0]:cutE[0][0]+len(freqE)])
                         RE1 = 10*np.log10(1+((np.pi*masa*freqE)/(p0*c0))**2) + 10*np.log10(2*ntE*freqE/(np.pi*self.fc))
@@ -268,11 +276,11 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                         arr2 = (RD,RF,RE)
                         arr2 = np.around(np.concatenate(arr2),decimals=1)
                     else:
-                        freqE = freq[freq > self.fc/2]
-                        cutE = np.where(freq == freqE[0])
-                        ntE = np.array(self.PerdidaxFreq[cutE[0][0]:cutE[0][0]+len(freqE)])
-                        RE1 = 10*np.log10(1+((np.pi*masa*freqE)/(p0*c0))**2) + 10*np.log10(2*ntE*freqE/(np.pi*self.fc))
-                        RE2 = 10*np.log10(1+((np.pi*masa*freqE)/(p0*c0))**2)-5.5
+                        # freqE = freq[freq > self.fc/2]
+                        # cutE = np.where(freq == freqE[0])
+                        # ntE = np.array(self.PerdidaxFreq[cutE[0][0]:cutE[0][0]+len(freqE)])
+                        RE1 = 10*np.log10(1+((np.pi*masa*freq)/(p0*c0))**2) + 10*np.log10(2*self.PerdidaxFreq*freq/(np.pi*self.fc))
+                        RE2 = 10*np.log10(1+((np.pi*masa*freq)/(p0*c0))**2)-5.5
                         RE = np.minimum(RE1,RE2)
                         arr2=RE
 
@@ -298,17 +306,15 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
                 #### ......  ####
 
-                ## Muestra data en la cajita de texto
-                self.textEdit.setText("Frecuencia Critica: "+str(round(self.fc,0))+
-                " Hz\nFrecuencia de Densidad: "+str(round(self.fd,0))+
-                " Hz\nFrecuencia de Resonancia (Primer modo): "+str(round(self.fr,0))+" Hz")
+
 
                 #Detalles Grafico:
 
                 self.GraphWidget.canvas.axes.legend(("Panel",'Sharp',"Davy","Iso"),loc='lower right')
                 self.GraphWidget.canvas.axes.axvline(self.fc,color="r",linestyle="--")
                 self.GraphWidget.canvas.axes.axvline(self.fd,color="r",linestyle="--")
-                self.GraphWidget.canvas.axes.axvline(self.fr,color="r",linestyle="--")
+                if self.fr>10:
+                    self.GraphWidget.canvas.axes.axvline(self.fr,color="r",linestyle="--")
                 self.GraphWidget.canvas.axes.set_title('Indice de Reduccion Sonora')
                 self.GraphWidget.canvas.axes.set_xscale('log')
                 # self.GraphWidget.canvas.axes.set_xticks(self.Resultados["Frecuencia"])
@@ -316,11 +322,11 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 self.GraphWidget.canvas.draw()
                 self.counter = self.counter + 1
 
-        #except AttributeError:
-            #self.Error(2)
+        except AttributeError:
+            self.Error(2)
 
-        #except IndexError:
-            #self.Error(3)
+        except IndexError:
+            self.Error(3)
     #################################################### END CALCULO
     ####END CALCULO
 
