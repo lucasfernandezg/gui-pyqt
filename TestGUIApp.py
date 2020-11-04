@@ -9,15 +9,26 @@ import numpy as np
 import pandas as pd
 import xlrd
 from TestGUI import Ui_Form
-from mystylesheet import stylesheet
+from unMic import Ui_unMic
+from mystylesheet import (stylesheet1, stylesheet2)
 import matplotlib
 
+###### TP2 ######
+class UnMic(QMainWindow, Ui_unMic):
+    def __init__(self, *args, obj=None, **kwargs):
+        super(UnMic, self).__init__(*args, **kwargs)
+        self.setupUi(self)
+        self.unMicAsignar.clicked.connect(self.close)
 
+
+####### Clase MAIN ######
 class MainWindow(QMainWindow, Ui_Form, QWidget):
     rightClicked = pyqtSignal()
     def __init__(self, *args, obj=None, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
+        # Instancias de Ventanas Emergentes para TP2
+        self.unMic = UnMic(self)
 
         self.CalculateButton.installEventFilter(self)
         # Explicacion
@@ -96,6 +107,9 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         "ISO 12354-1":[]
         }
 
+        # Abrir Ventanas Emergentes TP2
+        self.IngresarMano.clicked.connect(self.unMic.show)
+        #Hacer funcion que dependiendo medidas del cuarto abrir una ventana diferente
 
 
     ############## Funciones #############
@@ -472,6 +486,12 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         workbook.close()
 
 
+
+
+        # gg=[]
+        # for asdf in range(0,self.tableWidget.columnCount()):
+        #     gg.append(self.tableWidget.item(1,asdf).text())
+        # print(gg)
 ########################### END FUNCIONES ###############################
 
 
@@ -482,7 +502,7 @@ if __name__ == "__main__":
     # Create the application
     app = QApplication(sys.argv)
     #Style de la app (importada)
-    app.setStyleSheet(stylesheet)
+    app.setStyleSheet(stylesheet1)
     # Create and show the application's main window
     win = MainWindow()
     win.show()
