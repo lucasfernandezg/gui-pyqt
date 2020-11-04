@@ -279,8 +279,8 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
                         freq1 = freq[freq > (self.fc/2)]
                         freqF = freq1[freq1 < self.fc]
-                        y = freqE[0] - freqD[-1]
-                        x = RE[0] - RD[-1]
+                        # y = freqE[0] - freqD[-1]
+                        # x = RE[0] - RD[-1]
                         px = [freqD[-1],freqE[0]]
                         py = [RD[-1],RE[0]]
                         p = np.polyfit(px,py,1)
@@ -293,7 +293,9 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                         # freqE = freq[freq > self.fc/2]
                         # cutE = np.where(freq == freqE[0])
                         # ntE = np.array(self.PerdidaxFreq[cutE[0][0]:cutE[0][0]+len(freqE)])
-                        RE1 = 10*np.log10(1+((np.pi*masa*freq)/(p0*c0))**2) + 10*np.log10(2*self.PerdidaxFreq*freq/(np.pi*self.fc))
+
+                        print(10*np.log10(2*self.PerdidaxFreq*freq/(np.pi*self.fc)))
+                        RE1 = 10*np.log10(1+((np.pi*masa*freq)/(p0*c0))**2) + 10*np.log10(2*np.array(self.PerdidaxFreq)*freq/(np.pi*self.fc))
                         RE2 = 10*np.log10(1+((np.pi*masa*freq)/(p0*c0))**2)-5.5
                         RE = np.minimum(RE1,RE2)
                         arr2=list(np.around(RE,decimals=1))
