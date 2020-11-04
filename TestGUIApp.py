@@ -15,7 +15,7 @@ from Esquinas import Ui_Esquinas
 from mystylesheet import (stylesheet1, stylesheet2)
 import matplotlib
 
-###### TP2 ######
+############  TP2  #################
 class UnMic(QMainWindow, Ui_unMic):
     def __init__(self, *args, obj=None, **kwargs):
         super(UnMic, self).__init__(*args, **kwargs)
@@ -79,7 +79,8 @@ class Esquinas(QMainWindow, Ui_Esquinas):
     def __init__(self, *args, obj=None, **kwargs):
         super(Esquinas, self).__init__(*args, **kwargs)
         self.setupUi(self)
-
+        
+#################### Fin Ventanas Emergentes TP2 ###############################
 
 ####### Clase MAIN ######
 class MainWindow(QMainWindow, Ui_Form, QWidget):
