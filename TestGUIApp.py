@@ -10,6 +10,8 @@ import pandas as pd
 import xlrd
 from TestGUI import Ui_Form
 from unMic import Ui_unMic
+from dosMic import Ui_dosMic
+from Esquinas import Ui_Esquinas
 from mystylesheet import (stylesheet1, stylesheet2)
 import matplotlib
 
@@ -18,7 +20,65 @@ class UnMic(QMainWindow, Ui_unMic):
     def __init__(self, *args, obj=None, **kwargs):
         super(UnMic, self).__init__(*args, **kwargs)
         self.setupUi(self)
-        self.unMicAsignar.clicked.connect(self.close)
+        #Funcion que asigna valores y cierre ventana
+        self.unMicAsignar.clicked.connect(self.AsignarCerrar)
+
+    def AsignarCerrar(self):
+        self.medicionE={"FAM1":[],"FBM1":[]}
+        count=0
+        for it in range(1,self.tableWidget.columnCount()):
+            if self.CheckError(self.tableWidget.item(0,it).text()):
+                self.medicionE["FAM1"].append(self.tableWidget.item(0,it).text())
+                self.medicionE["FBM1"].append(self.tableWidget.item(1,it).text())
+            else:
+                count=count+1
+                break
+        if count==0:
+            self.close()
+
+    def CheckError(self,val):
+        try:
+            a = float(val)
+            if val:
+                if a > 0:
+                    return True
+                else:
+                    self.Error(0) #menor a 0
+                    return False
+            # else:
+            #     self.Error(2)
+            #     return False
+        except (ValueError,TypeError):
+            self.Error(1) #No es numero
+            return False
+
+    def Error(self,tipo):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Warning)
+        msg.setText("Detectamos un error!")
+        msg.setWindowTitle("Error")
+        msg.setStandardButtons(QMessageBox.Ok)
+        if tipo == 0:
+            msg.setDetailedText("Rompiste la realidad. Algun parametro ingresado es menor a cero!")
+        elif tipo == 1:
+            msg.setDetailedText("Ya estamos grandes... los parametros tienen que ser números.")
+        elif tipo == 2:
+            msg.setDetailedText("Parametros vacíos Willis. Puede que te hayas olvidado de tocar 'asignar' si estas en modo 'Usuario'.\nJaque Mate!")
+        elif tipo == 3:
+            msg.setDetailedText("La Frecuencia Critica quedó arriba de 20kHz a partir de los parametros dados. En un caso real, eso no sucede amigo.\nFrecuencia Critica: "+str(self.fc))
+        msg.exec_()
+
+
+class DosMic(QMainWindow, Ui_dosMic):
+    def __init__(self, *args, obj=None, **kwargs):
+        super(DosMic, self).__init__(*args, **kwargs)
+        self.setupUi(self)
+
+
+class Esquinas(QMainWindow, Ui_Esquinas):
+    def __init__(self, *args, obj=None, **kwargs):
+        super(Esquinas, self).__init__(*args, **kwargs)
+        self.setupUi(self)
 
 
 ####### Clase MAIN ######
@@ -29,6 +89,8 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         self.setupUi(self)
         # Instancias de Ventanas Emergentes para TP2
         self.unMic = UnMic(self)
+        self.dosMic = DosMic(self)
+        self.esquinas = Esquinas(self)
 
         self.CalculateButton.installEventFilter(self)
         # Explicacion
@@ -113,16 +175,25 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
 
     ############## Funciones #############
+    def Amano(self):
+        if self.superficieE < 50:
+            if self.volumenE < 25:
+                self.unMic.show()
+                self.Esquinas.show()
+            else:
+                self.unMic.show()
+        else:
+            self.dosMic.show()
     #Quiero agregar click derecho. No pude.#
-    def onClicked(self):
-        super(MainWindow, self).onClicked(event)
+    # def onClicked(self):
+    #     super(MainWindow, self).onClicked(event)
     #
 
     ## Sé que Asi capto que estoy tocando el click derecho:
-    def mousePressEvent(self, event):
-        if event.button() == Qt.RightButton:
-            print("click derecho")
-        super(MainWindow, self).mousePressEvent(event)
+    # def mousePressEvent(self, event):
+    #     if event.button() == Qt.RightButton:
+    #         print("click derecho")
+    #     super(MainWindow, self).mousePressEvent(event)
     ## ¿pero como lo asocio a un Widget en particular?
 
     #### Si modo usario, o no modo usuario ####
@@ -166,10 +237,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
             msg.setDetailedText("Parametros vacíos Willis. Puede que te hayas olvidado de tocar 'asignar' si estas en modo 'Usuario'.\nJaque Mate!")
         elif tipo == 3:
             msg.setDetailedText("La Frecuencia Critica quedó arriba de 20kHz a partir de los parametros dados. En un caso real, eso no sucede amigo.\nFrecuencia Critica: "+str(self.fc))
-
-
         msg.exec_()
-
 
 
     #### Decide que tipo de error tengo y luego Error(tipo)

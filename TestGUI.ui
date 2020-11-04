@@ -32,7 +32,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
@@ -514,7 +514,7 @@
       <string>Dimensiones de los recintos:</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEdit">
+    <widget class="QLineEdit" name="lineEditAlto2">
      <property name="geometry">
       <rect>
        <x>60</x>
@@ -579,7 +579,7 @@
       <string>Largo E:</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEdit_2">
+    <widget class="QLineEdit" name="lineEditLargoE">
      <property name="geometry">
       <rect>
        <x>60</x>
@@ -605,7 +605,7 @@
       <string>[m]</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEdit_5">
+    <widget class="QLineEdit" name="lineEditLargoR">
      <property name="geometry">
       <rect>
        <x>60</x>
@@ -644,7 +644,7 @@
       <string>[m]</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEdit_6">
+    <widget class="QLineEdit" name="lineEditAncho2">
      <property name="geometry">
       <rect>
        <x>60</x>
