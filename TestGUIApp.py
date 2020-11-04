@@ -294,7 +294,6 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                         # cutE = np.where(freq == freqE[0])
                         # ntE = np.array(self.PerdidaxFreq[cutE[0][0]:cutE[0][0]+len(freqE)])
 
-                        # print(10*np.log10(2*self.PerdidaxFreq*freq/(np.pi*self.fc)))
                         RE1 = 10*np.log10(1+((np.pi*masa*freq)/(p0*c0))**2) + 10*np.log10(2*np.array(self.PerdidaxFreq)*freq/(np.pi*self.fc))
                         RE2 = 10*np.log10(1+((np.pi*masa*freq)/(p0*c0))**2)-5.5
                         RE = np.minimum(RE1,RE2)
