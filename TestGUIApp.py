@@ -21,7 +21,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
         self.CalculateButton.installEventFilter(self)
         # Explicacion
-        self.textEdit.setText("Al iniciar esta aplicación por primera vez se crea un archivo llamado 'Materiales.xlsx' donde se guardan los datos de cada material. Si se desea agrandar la lista, solo agregue los nuevos materiales en el excel y reinicie la app.\n-NO cambie el nombre del excel.\n-NO cambie el nombre de las columnas ni la ubicacion de la tabla (que arranque en A1,1).'")
+        self.Consola.setText("Al iniciar esta aplicación por primera vez se crea un archivo llamado 'Materiales.xlsx' donde se guardan los datos de cada material. Si se desea agrandar la lista, solo agregue los nuevos materiales en el excel y reinicie la app.\n-NO cambie el nombre del excel.\n-NO cambie el nombre de las columnas ni la ubicacion de la tabla (que arranque en A1,1).'")
         # Contador para saber clean() el graph.
         self.counter = 0
         # Data Materiales de base
@@ -66,7 +66,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         #Funcion que se ejecuta cuando elijo material
         self.comboBox.currentIndexChanged.connect(self.what)
         #Boton Asignar
-        self.pushButton_3.setEnabled(False)
+        self.AsignarButton.setEnabled(False)
         # Line Edits de los parametros de material
         self.lineEditFactorP.setReadOnly(True)
         self.lineEditModuloP.setReadOnly(True)
@@ -74,10 +74,10 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         self.lineEditDensidad.setReadOnly(True)
 
         #Cuando cambio Parametros material a mano (solo cuando modo usuario)
-        self.pushButton_3.clicked.connect(self.AsignarMP)
-        self.pushButton_3.clicked.connect(self.AsignarMY)
-        self.pushButton_3.clicked.connect(self.AsignarFP)
-        self.pushButton_3.clicked.connect(self.AsignarD)
+        self.AsignarButton.clicked.connect(self.AsignarMP)
+        self.AsignarButton.clicked.connect(self.AsignarMY)
+        self.AsignarButton.clicked.connect(self.AsignarFP)
+        self.AsignarButton.clicked.connect(self.AsignarD)
 
 
         #Boton de calculo y graficado, y exportar
@@ -114,7 +114,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
     #### Si modo usario, o no modo usuario ####
     def what(self):
         if self.comboBox.currentText() == "Usuario":
-            self.pushButton_3.setEnabled(True)
+            self.AsignarButton.setEnabled(True)
             self.lineEditFactorP.setReadOnly(False)
             self.lineEditModuloP.setReadOnly(False)
             self.lineEditModuloY.setReadOnly(False)
@@ -123,9 +123,9 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
             self.lineEditModuloP.clear()
             self.lineEditModuloY.clear()
             self.lineEditDensidad.clear()
-            self.textEdit.setText("Para asignar los valores ingresados clickear 'Asignar' antes de 'Calcular'.")
+            self.Consola.setText("Para asignar los valores ingresados clickear 'Asignar' antes de 'Calcular'.")
         else:
-            self.pushButton_3.setEnabled(False)
+            self.AsignarButton.setEnabled(False)
             self.lineEditFactorP.setReadOnly(True)
             self.lineEditModuloP.setReadOnly(True)
             self.lineEditModuloY.setReadOnly(True)
@@ -206,7 +206,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 self.PerdidaxFreq = list(self.FactorP + masa/(485*np.sqrt(np.array(self.Resultados["Frecuencia"]))))
 
                 ## Muestra data en la cajita de texto
-                self.textEdit.setText("Frecuencia Critica: "+str(round(self.fc,0))+
+                self.Consola.setText("Frecuencia Critica: "+str(round(self.fc,0))+
                 " Hz\nFrecuencia de Densidad: "+str(round(self.fd,0))+
                 " Hz\nFrecuencia de Resonancia (Primer modo): "+str(round(self.fr,0))+" Hz")
 
