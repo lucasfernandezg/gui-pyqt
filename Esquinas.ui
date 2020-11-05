@@ -175,10 +175,10 @@
     <bool>false</bool>
    </property>
   </widget>
-  <widget class="QPushButton" name="unMicAsignar">
+  <widget class="QPushButton" name="EsquinasAsignar">
    <property name="geometry">
     <rect>
-     <x>120</x>
+     <x>200</x>
      <y>330</y>
      <width>121</width>
      <height>41</height>
@@ -186,6 +186,19 @@
    </property>
    <property name="text">
     <string>Asignar</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="ExcelButton">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>330</y>
+     <width>121</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Excel</string>
    </property>
   </widget>
  </widget>

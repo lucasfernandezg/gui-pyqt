@@ -20,8 +20,88 @@ class UnMic(QMainWindow, Ui_unMic):
     def __init__(self, *args, obj=None, **kwargs):
         super(UnMic, self).__init__(*args, **kwargs)
         self.setupUi(self)
+        self.setWindowTitle("Medicion de un Microfono (Superficie < 50 m2)")
+
         #Funcion que asigna valores y cierre ventana
+        self.freqm =[50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000]
         self.unMicAsignar.clicked.connect(self.AsignarCerrar)
+        self.ExcelButton.clicked.connect(self.CrearExcel)
+
+    def CrearExcel(self):
+        workbook = xlsxwriter.Workbook('Mediciones.xlsx')
+        worksheet = workbook.add_worksheet()
+        #worksheet.write
+        for i in range(1,len(self.freqm)+1):
+            worksheet.write(0, i, self.freqm[i-1])
+        worksheet.write(1, 0, "Fuente A / Mic 1")
+        worksheet.write(2, 0, "Fuente B / Mic 1")
+        workbook.close()
+
+    def AsignarCerrar(self):
+        self.medicionE={"FAM1":[],"FBM1":[]}
+        if os.path.isfile('Mediciones.xlsx'):
+            self.df = pd.read_excel("Mediciones.xlsx")
+            print(self.df.values.tolist())
+            fam1 = self.df.values.tolist()[0]
+            fam1.pop(0)
+            self.medicionE["FAM1"] = fam1
+            fbm1 = self.df.values.tolist()[1]
+            fbm1.pop(0)
+            self.medicionE["FBM1"] = fam1
+            os.remove("Mediciones.xlsx")
+        else:
+            count=0
+            for it in range(1,self.tableWidget.columnCount()):
+                if self.CheckError(self.tableWidget.item(0,it).text()):
+                    self.medicionE["FAM1"].append(self.tableWidget.item(0,it).text())
+                    self.medicionE["FBM1"].append(self.tableWidget.item(1,it).text())
+                else:
+                    count=count+1
+                    break
+            if count==0:
+                self.close()
+
+    def CheckError(self,val):
+        try:
+            a = float(val)
+            if val:
+                if a > 0:
+                    return True
+                else:
+                    self.Error(0) #menor a 0
+                    return False
+            # else:
+            #     self.Error(2)
+            #     return False
+        except (ValueError,TypeError):
+            self.Error(1) #No es numero
+            return False
+
+    def Error(self,tipo):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Warning)
+        msg.setText("Detectamos un error!")
+        msg.setWindowTitle("Error")
+        msg.setStandardButtons(QMessageBox.Ok)
+        if tipo == 0:
+            msg.setDetailedText("Rompiste la realidad. Algun parametro ingresado es menor a cero!")
+        elif tipo == 1:
+            msg.setDetailedText("Ya estamos grandes... los parametros tienen que ser números.")
+        elif tipo == 2:
+            msg.setDetailedText("Parametros vacíos Willis. Puede que te hayas olvidado de tocar 'asignar' si estas en modo 'Usuario'.\nJaque Mate!")
+        elif tipo == 3:
+            msg.setDetailedText("La Frecuencia Critica quedó arriba de 20kHz a partir de los parametros dados. En un caso real, eso no sucede amigo.\nFrecuencia Critica: "+str(self.fc))
+        msg.exec_()
+
+
+class DosMic(QMainWindow, Ui_dosMic):
+    def __init__(self, *args, obj=None, **kwargs):
+        super(DosMic, self).__init__(*args, **kwargs)
+        self.setupUi(self)
+        self.setWindowTitle("Medicion de Dos Microfonos (Superficie > 50 m2)")
+
+        self.dosMicAsignar.clicked.connect(self.AsignarCerrar)
+        #self.ExcelButton.clicked.connect(self.CrearExcel)
 
     def AsignarCerrar(self):
         self.medicionE={"FAM1":[],"FBM1":[]}
@@ -30,6 +110,13 @@ class UnMic(QMainWindow, Ui_unMic):
             if self.CheckError(self.tableWidget.item(0,it).text()):
                 self.medicionE["FAM1"].append(self.tableWidget.item(0,it).text())
                 self.medicionE["FBM1"].append(self.tableWidget.item(1,it).text())
+            else:
+                count=count+1
+                break
+        for it in range(1,self.tableWidget_2.columnCount()):
+            if self.CheckError(self.tableWidget_2.item(0,it).text()):
+                self.medicionE["FAM2"].append(self.tableWidget_2.item(0,it).text())
+                self.medicionE["FBM2"].append(self.tableWidget_2.item(1,it).text())
             else:
                 count=count+1
                 break
@@ -69,17 +156,67 @@ class UnMic(QMainWindow, Ui_unMic):
         msg.exec_()
 
 
-class DosMic(QMainWindow, Ui_dosMic):
-    def __init__(self, *args, obj=None, **kwargs):
-        super(DosMic, self).__init__(*args, **kwargs)
-        self.setupUi(self)
-
-
 class Esquinas(QMainWindow, Ui_Esquinas):
     def __init__(self, *args, obj=None, **kwargs):
         super(Esquinas, self).__init__(*args, **kwargs)
         self.setupUi(self)
-        
+        self.setWindowTitle("Corrección Graves")
+
+
+        self.EsquinasAsignar.clicked.connect(self.AsignarCerrar)
+        #self.ExcelButton.clicked.connect(self.CrearExcel)
+
+    def AsignarCerrar(self):
+        self.medicionE={"FAM1":[],"FBM1":[]}
+        count=0
+        for it in range(1,self.tableWidget.columnCount()):
+            if self.CheckError(self.tableWidget.item(0,it).text()):
+                self.medicionE["FAM1U"].append(self.tableWidget.item(0,it).text())
+                self.medicionE["FAM2U"].append(self.tableWidget.item(1,it).text())
+                self.medicionE["FAM1D"].append(self.tableWidget.item(2,it).text())
+                self.medicionE["FAM2D"].append(self.tableWidget.item(3,it).text())
+                self.medicionE["FBM1U"].append(self.tableWidget.item(4,it).text())
+                self.medicionE["FBM2U"].append(self.tableWidget.item(5,it).text())
+                self.medicionE["FBM1D"].append(self.tableWidget.item(6,it).text())
+                self.medicionE["FBM2D"].append(self.tableWidget.item(7,it).text())
+            else:
+                count=count+1
+                break
+        if count==0:
+            self.close()
+
+    def CheckError(self,val):
+        try:
+            a = float(val)
+            if val:
+                if a > 0:
+                    return True
+                else:
+                    self.Error(0) #menor a 0
+                    return False
+            # else:
+            #     self.Error(2)
+            #     return False
+        except (ValueError,TypeError):
+            self.Error(1) #No es numero
+            return False
+
+    def Error(self,tipo):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Warning)
+        msg.setText("Detectamos un error!")
+        msg.setWindowTitle("Error")
+        msg.setStandardButtons(QMessageBox.Ok)
+        if tipo == 0:
+            msg.setDetailedText("Rompiste la realidad. Algun parametro ingresado es menor a cero!")
+        elif tipo == 1:
+            msg.setDetailedText("Ya estamos grandes... los parametros tienen que ser números.")
+        elif tipo == 2:
+            msg.setDetailedText("Parametros vacíos Willis. Puede que te hayas olvidado de tocar 'asignar' si estas en modo 'Usuario'.\nJaque Mate!")
+        elif tipo == 3:
+            msg.setDetailedText("La Frecuencia Critica quedó arriba de 20kHz a partir de los parametros dados. En un caso real, eso no sucede amigo.\nFrecuencia Critica: "+str(self.fc))
+        msg.exec_()
+
 #################### Fin Ventanas Emergentes TP2 ###############################
 
 ####### Clase MAIN ######
@@ -88,6 +225,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
     def __init__(self, *args, obj=None, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
+        self.setWindowTitle("Medicion y Calculo de Indice de Reduccion Sonora")
         # Instancias de Ventanas Emergentes para TP2
         self.unMic = UnMic(self)
         self.dosMic = DosMic(self)
@@ -171,20 +309,32 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         }
 
         # Abrir Ventanas Emergentes TP2
-        self.IngresarMano.clicked.connect(self.unMic.show)
+        self.IngresarMano.clicked.connect(self.AmanoE)
+
         #Hacer funcion que dependiendo medidas del cuarto abrir una ventana diferente
 
 
     ############## Funciones #############
-    def Amano(self):
-        if self.superficieE < 50:
-            if self.volumenE < 25:
-                self.unMic.show()
-                self.Esquinas.show()
-            else:
-                self.unMic.show()
-        else:
-            self.dosMic.show()
+    def AmanoE(self):
+        try:
+            self.Ancho2 = float(self.lineEditAncho2.text())
+            self.Alto2 = float(self.lineEditAlto2.text())
+            self.LargoE = float(self.lineEditLargoE.text())
+            self.LargoR = float(self.lineEditLargoR.text())
+            if self.CheckError(self.Alto2) and self.CheckError(self.Ancho2) and self.CheckError(self.LargoE) and self.CheckError(self.LargoR):
+                self.superficieE = self.Ancho2*self.LargoE
+                self.volumenE = self.LargoE*self.Alto2*self.Ancho2
+                if self.superficieE < 50:
+                    if self.volumenE < 25:
+                        self.unMic.show()
+                        self.esquinas.show()
+                    else:
+                        self.unMic.show()
+                else:
+                    self.dosMic.show()
+
+        except ValueError:
+            self.Error(2)
     #Quiero agregar click derecho. No pude.#
     # def onClicked(self):
     #     super(MainWindow, self).onClicked(event)
