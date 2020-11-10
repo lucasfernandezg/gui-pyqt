@@ -29,3 +29,7 @@ p.add_run('Date').alignment = "right"
 
 
 doc.save('border_test.docx')
+
+a ={"asd":[1,2,3],"fdsa":[]}
+a ={"b":[3,2,1]}
+print(a)
