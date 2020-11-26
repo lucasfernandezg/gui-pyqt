@@ -601,7 +601,30 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 ##### ISO: ######
                 if self.checkBoxIso.isChecked() == True:
                     ### Calculos Iso
-                    pass
+                    k0 = 2*np.pi*freq/c0
+                    self.sigma1 = 1/np.sqrt(1-self.fc/freq)
+                    self.sigma2 = 4*self.Ancho*self.Alto*((freq/c0)**2)
+                    self.sigma3 = np.sqrt(2*np.pi*freq*(self.Ancho + self.Alto)/(16*c0))
+                    if self.Ancho>self.Alto:
+                        l1=self.Ancho
+                        l2=self.Alto
+                    else:
+                        l1=self.Alto
+                        l2=self.Ancho
+                    self.pico = -0.964-(0.5+l2/(np.pi*l1))*np.log(l2/l1) + 5*l2/(2*np.pi*l1) - 1/(4*np.pi*l2*l1*k0)
+                    self.sigmaf = 0.5*(np.log(k0*np.sqrt(l1*l2))-self.pico)
+
+                    ##SIGMA GRAL
+                    if self.fr <= (self.fc/2):
+                        sigmaA = self.sigma1[freq > self.fc]
+                        lambdaa = np.sqrt(freq/self.fc)
+                        d1 = ((1-lambdaa**2)*np.log((1+lambdaa)/(1-lambdaa))+2*lambdaa)/(4*(np.pi**2)*(1-(lambdaa**2))**1.5)
+                        d2 = 8*(c0**2)*(1-2*(lambdaa**2))/((self.fc**2)*(np.pi**4)*l1*l2*lambdaa*np.sqrt(1-lambdaa**2))
+                        sigmaB = (2*(l1+l2)*c0/(l1*l2*self.fc))*d1+d2
+                        sigmaB[(freq<self.fr)&(sigmaB>self.sigma2)]=self.sigma2[(freq<self.fr)&(sigmaB>self.sigma2)]
+                        print(self.sigmaf)
+
+
                 else:
                     #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None",marker="o")
                     pass
