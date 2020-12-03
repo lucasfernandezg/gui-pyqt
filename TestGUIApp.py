@@ -591,7 +591,41 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 ##### DAVY: #####
                 if self.checkBoxDavy.isChecked() == True:
                     ### Calculos Davy
-                    pass
+                    ms = self.Densidad * self.Espesor                          #Masa superficial
+                    B = (self.ModuloY*(self.Espesor**3))/(12*(1-(self.ModuloP**2)))  #B
+
+
+                    normal = p0 * c0 / (np.pi * freq * ms)
+                    normal2 = normal * normal
+                    e = 2*self.Ancho*self.Alto/(self.Ancho+self.Alto)
+                    cos2l = c0/(2*np.pi*freq*e)
+                    cos21Max = 0.9
+                    cos2l[cos2l>cos21Max] = cos21Max
+
+                    tau1 = normal2*np.log((normal2 + 1) / (normal2 + cos2l))
+                    ratio = freq/self.fc
+
+                    r = 1-1/ratio
+                    r[r<0] = 0
+
+                    G = np.sqrt(r)
+                    rad = self.sigma(G, freq, self.Ancho, self.Alto)
+                    rad2 = rad * rad
+                    netatotal = self.FactorP + rad * normal
+                    z = 2 / netatotal
+                    y = np.arctan(z)-np.arctan(z*(1-ratio))
+                    tau2 = normal2 * rad2 * y / (netatotal * 2 * ratio)
+                    tau2 = tau2 * self.shear(freq, self.Densidad, self.ModuloY, self.ModuloP, self.Espesor)
+
+                    tau = np.zeros_like(freq)
+                    tau[freq<self.fc] = tau1[freq<self.fc] + tau2[freq<self.fc]
+                    tau[freq>=self.fc] = tau2[freq>=self.fc]
+
+                    Rrr = -10 * np.log10(tau)
+
+                    self.Resultados["Davy"] = list(np.around(Rrr,decimals=1))
+                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], self.Resultados["Davy"],marker="o",label="Davy")
+
                 else:
                     #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None",marker="o")
                     pass
@@ -601,29 +635,101 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
                 ##### ISO: ######
                 if self.checkBoxIso.isChecked() == True:
                     ### Calculos Iso
-                    k0 = 2*np.pi*freq/c0
-                    self.sigma1 = 1/np.sqrt(1-self.fc/freq)
-                    self.sigma2 = 4*self.Ancho*self.Alto*((freq/c0)**2)
-                    self.sigma3 = np.sqrt(2*np.pi*freq*(self.Ancho + self.Alto)/(16*c0))
+                    # k0 = 2*np.pi*freq/c0
+                    # self.sigma1 = 1/np.sqrt(1-self.fc/freq)
+                    # self.sigma2 = 4*self.Ancho*self.Alto*((freq/c0)**2)
+                    # self.sigma3 = np.sqrt(2*np.pi*freq*(self.Ancho + self.Alto)/(16*c0))
+                    # if self.Ancho>self.Alto:
+                    #     l1=self.Ancho
+                    #     l2=self.Alto
+                    # else:
+                    #     l1=self.Alto
+                    #     l2=self.Ancho
+                    # self.pico = -0.964-(0.5+l2/(np.pi*l1))*np.log(l2/l1) + 5*l2/(2*np.pi*l1) - 1/(4*np.pi*l2*l1*k0)
+                    # self.sigmaf = 0.5*(np.log(k0*np.sqrt(l1*l2))-self.pico)
+                    #
+                    # ##SIGMA GRAL
+                    # if self.fr <= (self.fc/2):
+                    #     sigmaA = self.sigma1[freq > self.fc]
+                    #     lambdaa = np.sqrt(freq/self.fc)
+                    #     d1 = ((1-lambdaa**2)*np.log((1+lambdaa)/(1-lambdaa))+2*lambdaa)/(4*(np.pi**2)*(1-(lambdaa**2))**1.5)
+                    #     d2 = 8*(c0**2)*(1-2*(lambdaa**2))/((self.fc**2)*(np.pi**4)*l1*l2*lambdaa*np.sqrt(1-lambdaa**2))
+                    #     sigmaB = (2*(l1+l2)*c0/(l1*l2*self.fc))*d1+d2
+                    #     sigmaB[(freq<self.fr)&(sigmaB>self.sigma2)]=self.sigma2[(freq<self.fr)&(sigmaB>self.sigma2)]
+                    #     print(self.sigmaf)
+
+
                     if self.Ancho>self.Alto:
-                        l1=self.Ancho
-                        l2=self.Alto
+                        l1 = self.Ancho
+                        l2 = self.Alto
                     else:
-                        l1=self.Alto
-                        l2=self.Ancho
-                    self.pico = -0.964-(0.5+l2/(np.pi*l1))*np.log(l2/l1) + 5*l2/(2*np.pi*l1) - 1/(4*np.pi*l2*l1*k0)
-                    self.sigmaf = 0.5*(np.log(k0*np.sqrt(l1*l2))-self.pico)
+                        l1 = self.Alto
+                        l2 = self.Ancho
 
-                    ##SIGMA GRAL
-                    if self.fr <= (self.fc/2):
-                        sigmaA = self.sigma1[freq > self.fc]
-                        lambdaa = np.sqrt(freq/self.fc)
-                        d1 = ((1-lambdaa**2)*np.log((1+lambdaa)/(1-lambdaa))+2*lambdaa)/(4*(np.pi**2)*(1-(lambdaa**2))**1.5)
-                        d2 = 8*(c0**2)*(1-2*(lambdaa**2))/((self.fc**2)*(np.pi**4)*l1*l2*lambdaa*np.sqrt(1-lambdaa**2))
-                        sigmaB = (2*(l1+l2)*c0/(l1*l2*self.fc))*d1+d2
-                        sigmaB[(freq<self.fr)&(sigmaB>self.sigma2)]=self.sigma2[(freq<self.fr)&(sigmaB>self.sigma2)]
-                        print(self.sigmaf)
+                    ms = self.Densidad * self.Espesor                      #Masa superficial
+                    B = (self.ModuloY*(self.Espesor**3))/(12*(1-(self.ModuloP**2)))  #B
 
+                    fc = ((c0**2)/(2*np.pi))*(np.sqrt(ms/B))        #Frecuencia critica
+                    k0 = 2*np.pi*freq/c0                           #Numero de onda
+                    vlambda = np.sqrt(freq/self.fc)                     #Lambda
+
+                    delta1 = (((1-(vlambda**2))*np.log((1+vlambda)/(1-vlambda))+2*vlambda)/
+                              (4*(np.pi**2)*((1-(vlambda**2))**1.5)))
+                    delta2 = np.hstack(((8*(c0**2)*(1-2*(vlambda[freq<=self.fc/2]**2)))/
+                             ((fc**2)*(np.pi**4)*l1*l2*vlambda[freq<=self.fc/2]*np.sqrt(1-vlambda[freq<=self.fc/2]**2)),
+                             np.zeros_like(freq[freq>self.fc/2])))
+
+                    # Cálculo del factor SIGMA de radiación para ondas libres
+                    sigma1 = 1/np.sqrt(1-(self.fc/freq))
+                    sigma2 = 4*l1*l2*((freq/c0)**2)
+                    sigma3 = np.sqrt((2*np.pi*freq*(l1+l2))/(16*c0))
+                    f11 = ((c0**2)/(4*self.fc))*(l1**-2+l2**-2)          #Frecuencia 1er modo axial
+
+                    if f11<=fc/2:
+                        # sigma_d = ((2*(l1+l2))/(l1*l2))*(c0/fc)*delta1[freqs<fc] + delta2[freqs<fc]
+                        sigma_d = ((2*(l1+l2))/(l1*l2))*(c0/self.fc)*delta1[freq<self.fc]
+                        sigma2 = sigma2[freq<self.fc]
+                        freqs_under_fc = freq[freq<self.fc]
+                        sigma_d[(freqs_under_fc<f11)&(sigma_d>sigma2)] = sigma2[(freqs_under_fc<f11)&(sigma_d>sigma2)]
+                        sigma = np.hstack((sigma_d,sigma1[freq>=self.fc]))
+
+                    elif f11>fc/2:
+                        sigma = np.zeros_like(freq)
+                        sigma[(freq<self.fc)&(sigma2<sigma3)] = sigma2[(freq<self.fc)&(sigma2<sigma3)]
+                        sigma[(freq>=self.fc)&(sigma1<sigma3)] = sigma1[(freq>=self.fc)&(sigma1<sigma3)]
+                        sigma[sigma==0] = sigma3[sigma==0]
+
+                    # Se limita a sigma<=2 segun la norma.
+                    sigma[sigma>=2] = 2
+
+                    n_tot = self.FactorP + (ms/(485*np.sqrt(freq)))
+                    pico = -0.964-(0.5+(l2/(l1*np.pi)))*np.log(l2/l1)+(5*l2)/(2*np.pi*l1)-1/(4*np.pi*l1*l2*(k0**2))
+                    sigma_f = 0.5*(np.log(k0*np.sqrt(l1*l2)) - pico)
+                    sigma_f[sigma_f>=2] = 2
+                    sigma_f = np.abs(sigma_f)
+
+
+                    # 1st condition f < fc
+                    f1 = freq[freq<self.fc]
+                    n1_tot = n_tot[freq<self.fc]
+                    sigma1_f = sigma_f[freq<self.fc]
+                    a = (2*p0*c0)/(2*np.pi*f1*ms)
+                    b = 2*sigma1_f+(((l1+l2)**2)/(l1**2+l2**2))*np.sqrt(fc/f1)*((sigma[freq<self.fc]**2)/n1_tot)
+                    # b[0] = b[0]*-1
+                    tau1 = (a**2)*b
+
+                    # 2nd condition f >= fc
+                    f2 = freq[freq>=self.fc]
+                    n2_tot = n_tot[freq>=self.fc]
+                    a2 = (2*p0*c0)/(2*np.pi*f2*ms)
+                    b2 = (np.pi*fc*(sigma[freq>=self.fc]**2))/(2*f2*n2_tot)
+                    tau2 = (a2**2)*b2
+
+                    tau = np.hstack((tau1,tau2))
+                    Rar = -10*np.log10(tau)
+
+                    self.Resultados["ISO 12354-1"] = list(np.around(Rar,decimals=1))
+                    self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], self.Resultados["ISO 12354-1"],marker="o",label="ISO 12354-1")
 
                 else:
                     #self.GraphWidget.canvas.axes.plot(self.Resultados["Frecuencia"], np.zeros(len(self.Resultados["Frecuencia"])),linestyle="None",marker="o")
@@ -660,6 +766,54 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
 
     ################### END CALCULO ########################
     #END CALCULO
+    def shear(self,freqs, density, young, poisson, thickness):
+        chi = ((1 + poisson) / (0.87 + 1.12*poisson))**2
+        X = thickness**2 /12
+        QP = young / (1-poisson**2)
+        C = -((2*np.pi*freqs)**2)
+        B = C*(1 + 2*chi/(1-poisson))*X
+        A = X*QP / density
+        kbcor2 = (np.sqrt(B**2 - 4*A*C) - B) / (2*A)
+        kb2 = np.sqrt((-C) / A)
+        G = young/(2*(1+poisson))
+        kT2 = -C * density * chi / G
+        kL2 = -C * density / QP
+        kS2 = kT2 + kL2
+        ASI = 1 + X*((kbcor2*kT2 / kL2) - kT2)
+        ASI *= ASI
+        BSI = 1 - X*kT2 + kbcor2 * kS2 / (kb2**2)
+        CSI = np.sqrt(1- X*kT2 + (kS2**2)/(4*kb2*kb2))
+
+        return ASI / (BSI*CSI)
+
+    def sigma(self,G, freqs, lx, ly):
+        # Definición de constantes:
+        c0 = 343
+        w = 1.3
+        beta = 0.234
+        n = 2
+
+        S = lx*ly
+        U = 2 * (lx + ly)
+        twoa = 4 * S / U
+        k = 2 * np.pi * freqs / c0
+        f = w * np.sqrt(np.pi/(k*twoa))
+        f[f>1] = 1
+
+        h = 1 / (np.sqrt(k * twoa / np.pi) * 2 / 3 - beta)
+        q = 2 * np.pi / (k * k * S)
+        qn = q**n
+
+        alpha = h / f - 1
+        xn = np.zeros_like(freqs)
+
+        xn[G<f] = (h[G<f] - alpha[G<f]*G[G<f])**n
+        xn[G>=f] = G[G>=f]**n
+
+        rad = (xn + qn)**(-1 / n)
+
+        return rad
+
 
 
     ### Del excel a las variables y LineEdits ###
