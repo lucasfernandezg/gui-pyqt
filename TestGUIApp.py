@@ -85,7 +85,7 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
         self.CalculateButton.clicked.connect(self.Calculo)
         self.ExportButton.clicked.connect(self.Exportar)
 
-        ftercio = [20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,20000]
+        self.ftercio = [20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,20000]
         self.foct = [31.5,63,125,250,500,1000,2000,4000,8000,16000]
 
         #Dictionary a usar para data final
@@ -166,6 +166,11 @@ class MainWindow(QMainWindow, Ui_Form, QWidget):
     ############## PRINCIPAL (Hace todos los calculos) ################
     def Calculo(self):
         #Fijarnos que valores sean numeros y positivos: CheckError().
+        if self.radioButton3.isChecked():
+            self.Resultados["Frecuencia"] = self.ftercio
+        else:
+            self.Resultados["Frecuencia"] = self.foct
+
         try:
             if self.CheckError(self.ModuloP) and self.CheckError(self.ModuloY) and self.CheckError(self.FactorP) and self.CheckError(self.Densidad) and self.CheckError(self.lineEditAncho.text()) and self.CheckError(self.lineEditAlto.text()) and self.CheckError(self.lineEditEspesor.text()):
 
